@@ -1,36 +1,77 @@
 # Sjøgang
 
-**Sjøgang** er en lokal surf conditions-app for Agder.
+**Sjøgang** er en lokal surf intelligence-app for Agder.
 
-Appen skal gjøre det enklere å forstå surfeforhold ved å samle og presentere relevante data som:
-- bølger
-- swell
-- vind
-- periode
-- tidevann
-- lokale spot-vurderinger
+Appen samler og tolker vær- og havdata for å gi én enkel ting:
 
-
-Navnet *Sjøgang* kommer fra oseanografi, der sjøgang beskriver havoverflatens tilstand når det gjelder bølger forårsaket av vind og dønninger.
+**En tydelig vurdering av surfeforholdene på lokale spots.**
 
 ---
 
-## Visjon
+## Hva er Sjøgang?
 
-Sjøgang skal hjelpe surfere med å svare på ett enkelt spørsmål:
+Sjøgang er ikke en vanlig værapp.
 
-**Er det verdt å surfe her nå, i dag eller i morgen?**
+Det er en **lokal surf intelligence-plattform** som:
+- samler data fra flere vær- og hav-API-er
+- normaliserer dataene til én modell
+- kobler data til konkrete surf spots
+- gir en enkel vurdering av forholdene
 
-Målet er ikke å bygge en generisk værapp, men en lokal og nyttig surfetjeneste for kaldtvannssurf og norske forhold.
+Målet er å gjøre det enklere å svare på:
+
+**Er det verdt å surfe i dag?**
 
 ---
 
 ## Første fokusområde
 
-Første versjon er laget for:
-- Agder
+Sjøgang bygges først for:
 
-På sikt kan appen utvides til flere spots og regioner.
+- Agder
+- Lista
+- Vanse
+- utvalgte lokale surf spots
+
+Produktet er lokalt først, og kan utvides senere.
+
+---
+
+## Hvordan det fungerer
+
+Sjøgang fungerer som en aggregator + tolk:
+
+1. Henter data fra eksterne kilder:
+   - bølger / swell
+   - vind
+   - periode
+   - tidevann
+
+2. Normaliserer data til én intern modell
+
+3. Knytter data til surf spots
+
+4. Beregner en enkel vurdering:
+   - dårlig
+   - ok
+   - bra
+   - veldig bra
+
+5. Presenterer dette i en enkel og tydelig UI
+
+---
+
+## Hvorfor dette er nyttig
+
+Eksisterende vær- og surf-tjenester:
+- viser ofte rådata
+- er globale og lite lokale
+- krever erfaring for å tolke
+
+Sjøgang skal:
+- være lokalt relevant
+- være enkel å forstå
+- gi direkte verdi uten tolkning
 
 ---
 
@@ -41,8 +82,7 @@ På sikt kan appen utvides til flere spots og regioner.
 - TypeScript
 - Vite
 - React Router
-- TanStack Query eller enkel fetch i starten
-- Tailwind CSS eller enkel modulbasert styling
+- TanStack Query (eller enkel fetch i starten)
 
 ### Backend
 - Java
@@ -54,105 +94,59 @@ På sikt kan appen utvides til flere spots og regioner.
 
 ---
 
-## Hvorfor denne stacken?
-
-Sjøgang bygges med **React + Spring Boot** fordi:
-
-- React gir en god måte å lære moderne frontend i et ekte prosjekt
-- Spring Boot er allerede kjent teknologi og passer godt til API, auth og domenelogikk
-- denne kombinasjonen gjør det lettere å bygge videre senere med mer interaktive dashboards, spot-sider og webcam-funksjonalitet
-
-Dette er ikke nødvendigvis den absolutt raskeste stacken for å shippe en MVP, men det er en bevisst balanse mellom læring og produktbygging.
-
----
-
-## Produktretning
-
-Sjøgang skal ikke bare vise rå værdata.
-
-Produktet skal etter hvert gi:
-- lokale spot-sider
-- surf-relevante forhold
-- enkel vurdering av om spotten er bra eller dårlig
-- tydelig visning av vind, bølger, periode og tidevann
-- bedre lokal forståelse enn en generell værapp
-
----
-
-## MVP
-
-Første versjon skal være liten, enkel og nyttig.
-
-### Målet for MVP
-- vise lokale spots
-- vise forecast-data for hver spot
-- gjøre forholdene lettere å forstå
-- la brukeren lagre favoritter
-
-### MVP-funksjoner
-- registrering og login
-- liste over spots
-- spot-detaljside
-- bølgehøyde
-- swell-retning
-- periode
-- vindstyrke og vindretning
-- tidevann
-- favorittspots
-- enkel status eller score for forholdene
-
-
-
 ## Arkitektur
 
-Prosjektet deles i to hovedområder:
+Backend fungerer som en **data-aggregator og intelligence-lag**.
 
-### Plattformlag
-Generiske SaaS-funksjoner:
-- auth
-- bruker
-- konto
-- abonnement
-- settings
+### Lagdeling
 
-### Domenelag
-Surf- og havlogikk:
-- spots
-- forecast
-- tide
-- favorites
-- scoring
+#### 1. Providers
+Integrasjoner mot eksterne API-er:
+- værdata
+- bølger
+- tidevann
 
+Eksempler:
+- MetProvider
+- OpenMeteoProvider
+- StormglassProvider
+
+#### 2. Normalisering
+Oversetter rådata til en intern modell:
+
+- `SpotConditions`
+- `ForecastSnapshot`
+- `TideSnapshot`
+
+#### 3. Persistence / cache
+- lagrer data lokalt
+- reduserer API-kall
+- muliggjør historikk
+
+#### 4. Domenelogikk
+- kobler data til spots
+- evaluerer forhold
+- beregner score
+
+#### 5. API
+Eksponerer data til frontend:
+- `/api/spots`
+- `/api/spots/{slug}`
+- `/api/spots/{slug}/conditions`
 
 ---
 
-## Prosjektstruktur
+## Intern datamodell (eksempel)
 
 ```text
-sjogang/
-  backend/
-    src/main/java/no/sjogang/
-      auth/
-      user/
-      spot/
-      forecast/
-      tide/
-      favorites/
-      scoring/
-      webcam/
-    src/main/resources/
-
-  frontend/
-    src/
-      app/
-      components/
-      features/
-        spots/
-        forecast/
-        favorites/
-      pages/
-      api/
-      hooks/
-      types/
-
-  docs/
+SpotConditions
+- spotSlug
+- timestamp
+- waveHeightMeters
+- swellDirection
+- wavePeriodSeconds
+- windSpeed
+- windDirection
+- tideLevel
+- score
+- summary
